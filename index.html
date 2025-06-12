@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,
+initial-scale=1.0, user-scalable=no">
+<title>Game Bắn Máy Bay: Phiên Bản Siêu Ổn Định</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script
+src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></sc
+ript>
+<style>
+body { margin: 0; padding: 0; height: 100vh; width: 100vw;
+overflow: hidden; background-color: #000; font-family: 'Inter',
+sans-serif; touch-action: none; }
+#gameContainer { position: relative; width: 100%; height:
+100%; }
+#gameCanvas { display: block; background-color: #0c0a18;
+width: 100%; height: 100%; cursor: none; }
+.ui-overlay { position: absolute; top: 0; left: 0; width:
+100%; height: 100%; pointer-events: none; z-index: 10; }
+.ui-overlay button { pointer-events: auto; }
+.skill-button { width: 65px; height: 65px; border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+font-size: 28px; font-weight: bold; color: white; border: 3px solid
+white; box-shadow: 0 0 10px rgba(255, 255, 255, 0.7); cursor: pointer;
+transition: all 0.2s ease; margin-bottom: 10px; }
+.skill-button.ultimate { width: 75px; height: 75px; font-size:
+36px; border-color: #ffd700; box-shadow: 0 0 20px #ffd700; }
+.skill-button:disabled { background-color: #555 !important;
+color: #aaa; cursor: not-allowed; border-color: #777; }
+.health-bar-container { width: 60%; height: 20px;
+background-color: #444; border-radius: 10px; border: 2px solid #fff;
+overflow: hidden; }
+.health-bar { height: 100%; background: linear-gradient(90deg,
+#ff4d4d, #ff0000); transition: width 0.3s ease-in-out; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com"
+crossorigin>
+<link
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&disp
+lay=swap" rel="stylesheet">
+</head>
+<body>
+<div id="gameContainer">
+<canvas id="gameCanvas"></canvas>
+<div class="ui-overlay flex flex-col justify-betweentext-white">
+<!-- Top UI -->
+<div id="top-ui" class="w-full p-4">
+<div class="flex justify-between items-center">
+<h2 class="text-2xl font-bold">Điểm: <span
+id="score">0</span></h2>
+<div id="livesContainer" class="text-3xl"></div>
+</div>
+<div id="bossHealthContainer" class="hidden flex-col
+items-center mt-2">
+<h3 id="bossName" class="text-xl font-bold
+mb-1"></h3>
+<div class="health-bar-container">
+<div id="bossHealthBar"
+class="health-bar"></div>
+</div>
+</div>
+</div>
+<!-- Center UI -->
+<div class="absolute inset-0 flex items-center
+justify-center">
+<h1 id="announcementText" class="text-4xl md:text-6xl
+font-extrabold text-center text-red-500 animate-pulse hidden"></h1>
+<div id="gameOverMenu" class="hidden flex-col
+items-center justify-center text-center">
+<h1 class="text-5xl font-bold mb-4">GAME OVER</h1>
+<p class="text-xl mb-6">Điểm cuối cùng: <span
+id="finalScore">0</span></p>
+<button id="restartButton" class="bg-blue-500
+hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-2xl
+shadow-lg">Chơi Lại</button>
+</div>
+<div id="victoryMenu" class="hidden flex-col
+items-center justify-center text-center">
+<h1 class="text-6xl font-bold mb-4 text-yellow-400
+animate-pulse">CHIẾN THẮNG</h1>
+<p class="text-2xl mb-8">Game created by Dũng</p>
+<button id="playAgainButton" class="bg-green-500
+hover:bg-green-700 text-white font-bold py-4 px-8 rounded-lg text-3xl
+shadow-lg">Chơi Lại</button>
+</div>
+<div id="startMenu" class="absolute inset-0 flex
+flex-col items-center justify-center text-center bg-black
+bg-opacity-50">
+<h1 class="text-6xl font-bold mb-4
+animate-pulse">Sức Mạnh Tối Thượng</h1>
+<p class="text-2xl mb-8">PC: WASD/Chuột + 1234G |
+Mobile: Chạm & Kéo</p><button id="startButton" class="bg-green-500
+hover:bg-green-700 text-white font-bold py-4 px-8 rounded-lg text-3xl
+shadow-lg">BẮT ĐẦU</button>
+</div>
+</div>
+<!-- Skills UI -->
+<div id="skillsContainer" >
+<div id="left-skills" class="absolute bottom-0 left-0
+p-4 flex flex-col-reverse">
+<button id="shieldSkillButton"
+class="skill-button bg-blue-600">🛡<span class="absolute -top-2
+-right-2 text-base bg-black bg-opacity-70 rounded-full
+px-2">1</span></button>
+<button id="damageSkillButton"
+class="skill-button bg-green-600">💪<span class="absolute -top-2
+-right-2 text-base bg-black bg-opacity-70 rounded-full
+px-2">2</span></button>
+</div>
+<div id="center-skills" class="absolute bottom-0
+left-1/2 -translate-x-1/2 p-4 flex flex-col-reverse">
+<button id="timeStopSkillButton"
+class="skill-button ultimate bg-purple-700">⏳<span class="absolute
+-top-2 -right-2 text-base bg-black bg-opacity-70 rounded-full
+px-2">G</span></button>
+</div>
+<div id="right-skills" class="absolute bottom-0
+right-0 p-4 flex flex-col-reverse">
+<button id="bombSkillButton" class="skill-button
+bg-red-600">💣<span class="absolute -top-2 -right-2 text-base bg-black
+bg-opacity-70 rounded-full px-2">3</span></button>
+<button id="machineGunSkillButton"
+class="skill-button bg-yellow-500">🔫<span class="absolute -top-2
+-right-2 text-base bg-black bg-opacity-70 rounded-full
+px-2">4</span></button>
+</div>
+</div>
+</div>
+</div>
+<script src="main.js"></script>
+</body>
+</html>
